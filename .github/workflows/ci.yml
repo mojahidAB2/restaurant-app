@@ -18,7 +18,7 @@ jobs:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: ci_password
-          MYSQL_DATABASE: restaurant_ci
+          MYSQL_DATABASE: restaurant_db
         ports:
           - 3306:3306
         options: >-
@@ -44,7 +44,7 @@ jobs:
         run: mysql -h 127.0.0.1 -u root -p"$DB_PASSWORD" "$DB_NAME" < src/database/schema.sql
         env:
           DB_PASSWORD: ci_password
-          DB_NAME: restaurant_ci
+          DB_NAME: restaurant_db
 
       - name: Lancer les tests
         run: npm test
@@ -52,4 +52,4 @@ jobs:
           DB_HOST: 127.0.0.1
           DB_USER: root
           DB_PASSWORD: ci_password
-          DB_NAME: restaurant_ci
+          DB_NAME: restaurant_db
