@@ -1,14 +1,10 @@
 -- ============================================================
 -- BASE DE DONNÉES DU RESTAURANT
 -- ============================================================
-
 USE restaurant_db;
-
-
 -- ============================================================
 -- TABLE : categories
 -- ============================================================
-
 CREATE TABLE IF NOT EXISTS categories (
 
     -- Identifiant unique
@@ -19,10 +15,7 @@ CREATE TABLE IF NOT EXISTS categories (
 
     -- Date de création
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-
 );
-
-
 -- ============================================================
 -- TABLE : products
 -- ============================================================
@@ -54,14 +47,10 @@ CREATE TABLE IF NOT EXISTS products (
     CONSTRAINT fk_products_category
         FOREIGN KEY (category_id)
         REFERENCES categories(id)
-
 );-- ============================================================
 -- BASE DE DONNÉES DU RESTAURANT
 -- ============================================================
-
 USE restaurant_db;
-
-
 -- ============================================================
 -- TABLE : categories
 -- ============================================================
@@ -112,4 +101,14 @@ CREATE TABLE IF NOT EXISTS products (
         FOREIGN KEY (category_id)
         REFERENCES categories(id)
 
+);
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'staff') NOT NULL DEFAULT 'staff',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
 );

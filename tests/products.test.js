@@ -283,6 +283,67 @@ describe("Products API", () => {
 
 });
 
+test("POST /api/products refuse un prix négatif", async () => {
+    const response = await request(app)
+        .post("/api/products")
+        .send({
+            name: "Produit test",
+            price: -10,
+            category_id: 1
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le prix doit être un nombre supérieur à 0"
+    );
+});
+
+test("POST /api/products refuse un category_id non entier", async () => {
+    const response = await request(app)
+        .post("/api/products")
+        .send({
+            name: "Produit test",
+            price: 10,
+            category_id: "abc"
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "category_id doit être un nombre entier"
+    );
+});
+
+test("POST /api/products refuse un nom vide", async () => {
+    const response = await request(app)
+        .post("/api/products")
+        .send({
+            name: "",
+            price: 10,
+            category_id: 1
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le nom du produit est obligatoire"
+    );
+});
+
+
+test("POST /api/products refuse une catégorie inexistante", async () => {
+    const response = await request(app)
+        .post("/api/products")
+        .send({
+            name: "Produit test",
+            price: 50,
+            category_id: 9999
+        });
+
+   expect(response.statusCode).toBe(404);
+expect(response.body.error).toBe(
+    "La catégorie n'existe pas"
+);
+});
+
 // ==================================================
 // Fermer la connexion MySQL
 // ==================================================

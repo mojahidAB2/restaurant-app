@@ -15,8 +15,10 @@ const productsRoutes = require("./src/routes/products.routes");
 // Importe les routes des catégories
 const categoriesRoutes = require("./src/routes/categories.routes");
 
-const app = express();
+// Connexion à la base de données
+const pool = require("./src/config/database");
 
+const app = express();
 
 // ==================================================
 // Middleware
@@ -28,11 +30,16 @@ app.use(express.json());
 // Sécurité des headers HTTP
 app.use(helmet());
 
+// ==================================================
+// Swagger
+// ==================================================
+
 app.use(
     "/api-docs",
     swaggerUi.serve,
     swaggerUi.setup(swaggerSpec)
 );
+
 /**
  * @openapi
  * /health:
@@ -57,7 +64,6 @@ app.use("/api/products", productsRoutes);
 // Routes des catégories
 app.use("/api/categories", categoriesRoutes);
 
-
 // ==================================================
 // Route principale
 // ==================================================
@@ -68,7 +74,9 @@ app.get("/", (req, res) => {
     });
 });
 
-const pool = require("./src/config/database");
+// ==================================================
+// Health Check
+// ==================================================
 
 app.get("/health", async (req, res) => {
     try {
@@ -92,13 +100,11 @@ app.get("/health", async (req, res) => {
 
 app.use(notFoundMiddleware);
 
-
 // ==================================================
 // Middleware global de gestion des erreurs
 // ==================================================
 
 app.use(errorMiddleware);
-
 
 // ==================================================
 // Exporter l'application

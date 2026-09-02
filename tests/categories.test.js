@@ -262,6 +262,57 @@ describe("Categories API", () => {
 
 });
 
+test("POST /api/categories refuse un nom vide", async () => {
+    const response = await request(app)
+        .post("/api/categories")
+        .send({
+            name: ""
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le nom de la catégorie est obligatoire"
+    );
+});
+
+test("POST /api/categories refuse un nom composé uniquement d'espaces", async () => {
+    const response = await request(app)
+        .post("/api/categories")
+        .send({
+            name: "   "
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le nom de la catégorie est obligatoire"
+    );
+});
+
+test("POST /api/categories refuse un nom qui n'est pas une chaîne", async () => {
+    const response = await request(app)
+        .post("/api/categories")
+        .send({
+            name: 123
+        });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le nom de la catégorie est obligatoire"
+    );
+});
+
+test("POST /api/categories refuse un nom absent", async () => {
+    const response = await request(app)
+        .post("/api/categories")
+        .send({});
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.error).toBe(
+        "Le nom de la catégorie est obligatoire"
+    );
+});
+
+
 // ==================================================
 // Fermer la connexion MySQL
 // ==================================================

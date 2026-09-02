@@ -6,9 +6,7 @@ services:
 
   db:
     image: mysql:8.0
-
     container_name: restaurant-mysql
-
     restart: unless-stopped
 
     environment:
@@ -27,19 +25,12 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${DB_PASSWORD}"
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD} || exit 1"
         ]
       interval: 10s
       timeout: 5s
       retries: 5
-
 
   # ============================================================
   # NODE.JS API
@@ -47,9 +38,7 @@ services:
 
   api:
     build: .
-
     container_name: restaurant-api
-
     restart: unless-stopped
 
     ports:
@@ -65,18 +54,18 @@ services:
       db:
         condition: service_healthy
 
-healthcheck:
-  test:
-    [
-      "CMD",
-      "node",
-      "-e",
-      "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
-    ]
-  interval: 10s
-  timeout: 5s
-  retries: 5
-  
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 # ============================================================
 # MYSQL VOLUME
 # ============================================================
