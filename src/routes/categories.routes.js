@@ -17,16 +17,6 @@ const validateId = require("../middleware/id.validation");
 
 const router = express.Router();
 
-
-// ==================================================
-// GET /api/categories
-// Récupérer toutes les catégories
-// ==================================================
-
-router.get(
-    "/",
-    getAllCategories
-);
 /**
  * @openapi
  * /api/categories:
@@ -38,17 +28,7 @@ router.get(
  *       200:
  *         description: Liste des catégories
  */
-
-// ==================================================
-// GET /api/categories/:id
-// Récupérer une catégorie
-// ==================================================
-
-router.get(
-    "/:id",
-    validateId,
-    getCategoryById
-);
+router.get("/", getAllCategories);
 
 /**
  * @openapi
@@ -72,18 +52,7 @@ router.get(
  *       404:
  *         description: Catégorie introuvable
  */
-
-
-// ==================================================
-// POST /api/categories
-// Créer une catégorie
-// ==================================================
-
-router.post(
-    "/",
-    validateCategoryData,
-    createCategory
-);
+router.get("/:id", validateId, getCategoryById);
 
 /**
  * @openapi
@@ -112,18 +81,7 @@ router.post(
  *       409:
  *         description: Catégorie déjà existante
  */
-
-// ==================================================
-// PUT /api/categories/:id
-// Modifier une catégorie
-// ==================================================
-
-router.put(
-    "/:id",
-    validateId,
-    validateCategoryData,
-    updateCategory
-);
+router.post("/", validateCategoryData, createCategory);
 
 /**
  * @openapi
@@ -159,16 +117,11 @@ router.put(
  *       404:
  *         description: Catégorie introuvable
  */
-
-// ==================================================
-// DELETE /api/categories/:id
-// Supprimer une catégorie
-// ==================================================
-
-router.delete(
+router.put(
     "/:id",
     validateId,
-    deleteCategory
+    validateCategoryData,
+    updateCategory
 );
 
 /**
@@ -193,10 +146,6 @@ router.delete(
  *       404:
  *         description: Catégorie introuvable
  */
-
-
-// ==================================================
-// Exporter le router
-// ==================================================
+router.delete("/:id", validateId, deleteCategory);
 
 module.exports = router;

@@ -17,16 +17,6 @@ const validateId = require("../middleware/id.validation");
 
 const router = express.Router();
 
-
-// ==================================================
-// GET /api/products
-// ==================================================
-
-router.get(
-    "/",
-    getAllProducts
-);
-
 /**
  * @openapi
  * /api/products:
@@ -38,16 +28,7 @@ router.get(
  *       200:
  *         description: Liste des produits
  */
-
-// ==================================================
-// GET /api/products/:id
-// ==================================================
-
-router.get(
-    "/:id",
-    validateId,
-    getProductById
-);
+router.get("/", getAllProducts);
 
 /**
  * @openapi
@@ -71,16 +52,7 @@ router.get(
  *       404:
  *         description: Produit introuvable
  */
-
-// ==================================================
-// POST /api/products
-// ==================================================
-
-router.post(
-    "/",
-    validateProductData,
-    createProduct
-);
+router.get("/:id", validateId, getProductById);
 
 /**
  * @openapi
@@ -113,8 +85,8 @@ router.post(
  *                 type: integer
  *                 example: 1
  *               available:
- *                 type: integer
- *                 example: 1
+ *                 type: boolean
+ *                 example: true
  *     responses:
  *       201:
  *         description: Produit créé avec succès
@@ -123,17 +95,7 @@ router.post(
  *       404:
  *         description: Catégorie introuvable
  */
-
-// ==================================================
-// PUT /api/products/:id
-// ==================================================
-
-router.put(
-    "/:id",
-    validateId,
-    validateProductData,
-    updateProduct
-);
+router.post("/", validateProductData, createProduct);
 
 /**
  * @openapi
@@ -173,25 +135,21 @@ router.put(
  *                 type: integer
  *                 example: 1
  *               available:
- *                 type: integer
- *                 example: 1
+ *                 type: boolean
+ *                 example: true
  *     responses:
  *       200:
  *         description: Produit modifié avec succès
  *       400:
  *         description: Identifiant ou données invalides
  *       404:
- *         description: Produit introuvable
+ *         description: Produit ou catégorie introuvable
  */
-
-// ==================================================
-// DELETE /api/products/:id
-// ==================================================
-
-router.delete(
+router.put(
     "/:id",
     validateId,
-    deleteProduct
+    validateProductData,
+    updateProduct
 );
 
 /**
@@ -216,9 +174,6 @@ router.delete(
  *       404:
  *         description: Produit introuvable
  */
-
-// ==================================================
-// Exporter le router
-// ==================================================
+router.delete("/:id", validateId, deleteProduct);
 
 module.exports = router;
