@@ -2,6 +2,7 @@ const express = require("express");
 const helmet = require("helmet");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
+const authRoutes = require("./src/routes/auth.routes");
 
 // Importe le middleware 404
 const notFoundMiddleware = require("./src/middleware/notFound.middleware");
@@ -64,6 +65,9 @@ app.use("/api/products", productsRoutes);
 // Routes des catégories
 app.use("/api/categories", categoriesRoutes);
 
+// Routes d'authentification
+app.use("/api/auth", authRoutes);
+
 // ==================================================
 // Route principale
 // ==================================================
@@ -93,6 +97,8 @@ app.get("/health", async (req, res) => {
         });
     }
 });
+
+
 
 // ==================================================
 // Middleware 404

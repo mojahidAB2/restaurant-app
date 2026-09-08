@@ -1,7 +1,27 @@
+require("dotenv").config();
+
 const request = require("supertest");
 const app = require("../app");
 const pool = require("../src/config/database");
+const jwt = require("jsonwebtoken");
 
+// ==================================================
+// Fonction utilitaire
+// Créer un token JWT de test
+// ==================================================
+
+const createAuthToken = (role = "staff") => {
+    return jwt.sign(
+        {
+            id: role === "admin" ? 2 : 1,
+            role
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "1h"
+        }
+    );
+};
 
 // ==================================================
 // Tests Categories
@@ -34,6 +54,10 @@ describe("Categories API", () => {
         // Créer une catégorie de test
         const createResponse = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: `Categorie GET ID Jest ${Date.now()}`
             });
@@ -59,7 +83,11 @@ describe("Categories API", () => {
 
         // Nettoyage
         await request(app)
-            .delete(`/api/categories/${categoryId}`);
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
 
     });
 
@@ -95,6 +123,10 @@ describe("Categories API", () => {
 
         const response = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: categoryName
             });
@@ -114,7 +146,11 @@ describe("Categories API", () => {
         const categoryId = response.body.id;
 
         await request(app)
-            .delete(`/api/categories/${categoryId}`);
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
 
     });
 
@@ -128,6 +164,10 @@ describe("Categories API", () => {
 
         const response = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({});
 
 
@@ -153,6 +193,10 @@ describe("Categories API", () => {
         // Première création
         const firstResponse = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: categoryName
             });
@@ -165,6 +209,10 @@ describe("Categories API", () => {
         // Deuxième création avec le même nom
         const secondResponse = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: categoryName
             });
@@ -180,7 +228,11 @@ describe("Categories API", () => {
 
         // Nettoyage
         await request(app)
-            .delete(`/api/categories/${categoryId}`);
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
 
     });
 
@@ -194,6 +246,10 @@ describe("Categories API", () => {
         // Créer une catégorie
         const createResponse = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: `Categorie PUT Jest ${Date.now()}`
             });
@@ -204,8 +260,13 @@ describe("Categories API", () => {
 
 
         // Modifier la catégorie
+        // PUT est réservé au rôle admin
         const updateResponse = await request(app)
             .put(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            )
             .send({
                 name: `Categorie PUT Modifiee ${Date.now()}`
             });
@@ -222,7 +283,11 @@ describe("Categories API", () => {
 
         // Nettoyage
         await request(app)
-            .delete(`/api/categories/${categoryId}`);
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
 
     });
 
@@ -236,6 +301,10 @@ describe("Categories API", () => {
         // Créer une catégorie
         const createResponse = await request(app)
             .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
             .send({
                 name: `Categorie DELETE Jest ${Date.now()}`
             });
@@ -247,7 +316,11 @@ describe("Categories API", () => {
 
         // Supprimer la catégorie
         const deleteResponse = await request(app)
-            .delete(`/api/categories/${categoryId}`);
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
 
 
         // Vérifier la réponse
@@ -260,58 +333,182 @@ describe("Categories API", () => {
 
     });
 
-});
 
-test("POST /api/categories refuse un nom vide", async () => {
-    const response = await request(app)
-        .post("/api/categories")
-        .send({
-            name: ""
+    // --------------------------------------------------
+    // POST /api/categories
+    // Nom vide
+    // --------------------------------------------------
+
+    test("POST /api/categories refuse un nom vide", async () => {
+
+        const response = await request(app)
+            .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
+            .send({
+                name: ""
+            });
+
+        expect(response.statusCode).toBe(400);
+
+        expect(response.body.error).toBe(
+            "Le nom de la catégorie est obligatoire"
+        );
+
+    });
+
+
+    // --------------------------------------------------
+    // POST /api/categories
+    // Nom composé uniquement d'espaces
+    // --------------------------------------------------
+
+    test("POST /api/categories refuse un nom composé uniquement d'espaces", async () => {
+
+        const response = await request(app)
+            .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
+            .send({
+                name: "   "
+            });
+
+        expect(response.statusCode).toBe(400);
+
+        expect(response.body.error).toBe(
+            "Le nom de la catégorie est obligatoire"
+        );
+
+    });
+
+
+    // --------------------------------------------------
+    // POST /api/categories
+    // Nom qui n'est pas une chaîne
+    // --------------------------------------------------
+
+    test("POST /api/categories refuse un nom qui n'est pas une chaîne", async () => {
+
+        const response = await request(app)
+            .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
+            .send({
+                name: 123
+            });
+
+        expect(response.statusCode).toBe(400);
+
+        expect(response.body.error).toBe(
+            "Le nom de la catégorie est obligatoire"
+        );
+
+    });
+
+
+    // --------------------------------------------------
+    // POST /api/categories
+    // Nom absent
+    // --------------------------------------------------
+
+    test("POST /api/categories refuse un nom absent", async () => {
+
+        const response = await request(app)
+            .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
+            .send({});
+
+        expect(response.statusCode).toBe(400);
+
+        expect(response.body.error).toBe(
+            "Le nom de la catégorie est obligatoire"
+        );
+
+    });
+
+
+    // --------------------------------------------------
+    // POST /api/categories
+    // Sans JWT
+    // --------------------------------------------------
+
+    test("POST /api/categories doit retourner 401 sans JWT", async () => {
+
+        const response = await request(app)
+            .post("/api/categories")
+            .send({
+                name: `Categorie Sans JWT ${Date.now()}`
+            });
+
+        expect(response.statusCode).toBe(401);
+
+        expect(response.body.error).toBe(
+            "Token d'authentification manquant"
+        );
+
+    });
+
+
+    // --------------------------------------------------
+    // DELETE /api/categories/:id
+    // Staff interdit
+    // --------------------------------------------------
+
+    test("DELETE /api/categories/:id doit retourner 403 pour un staff", async () => {
+
+        // Créer une catégorie
+        const createResponse = await request(app)
+            .post("/api/categories")
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            )
+            .send({
+                name: `Categorie RBAC Jest ${Date.now()}`
+            });
+
+        expect(createResponse.statusCode).toBe(201);
+
+        const categoryId = createResponse.body.id;
+
+
+        // Tentative de suppression avec staff
+        const deleteResponse = await request(app)
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("staff")}`
+            );
+
+
+        // Vérifier l'accès interdit
+        expect(deleteResponse.statusCode).toBe(403);
+
+        expect(deleteResponse.body).toEqual({
+            error: "Accès interdit pour ce rôle"
         });
 
-    expect(response.statusCode).toBe(400);
-    expect(response.body.error).toBe(
-        "Le nom de la catégorie est obligatoire"
-    );
+
+        // Nettoyage avec admin
+        await request(app)
+            .delete(`/api/categories/${categoryId}`)
+            .set(
+                "Authorization",
+                `Bearer ${createAuthToken("admin")}`
+            );
+
+    });
+
 });
-
-test("POST /api/categories refuse un nom composé uniquement d'espaces", async () => {
-    const response = await request(app)
-        .post("/api/categories")
-        .send({
-            name: "   "
-        });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body.error).toBe(
-        "Le nom de la catégorie est obligatoire"
-    );
-});
-
-test("POST /api/categories refuse un nom qui n'est pas une chaîne", async () => {
-    const response = await request(app)
-        .post("/api/categories")
-        .send({
-            name: 123
-        });
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body.error).toBe(
-        "Le nom de la catégorie est obligatoire"
-    );
-});
-
-test("POST /api/categories refuse un nom absent", async () => {
-    const response = await request(app)
-        .post("/api/categories")
-        .send({});
-
-    expect(response.statusCode).toBe(400);
-    expect(response.body.error).toBe(
-        "Le nom de la catégorie est obligatoire"
-    );
-});
-
 
 // ==================================================
 // Fermer la connexion MySQL

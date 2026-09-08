@@ -1,6 +1,6 @@
 const express = require("express");
-
-// Importe les controllers des catégories
+const authorizeRoles = require("../middleware/role.middleware");
+// Importe les controllers
 const {
     getAllCategories,
     getCategoryById,
@@ -12,8 +12,11 @@ const {
 // Importe la validation commune des catégories
 const validateCategoryData = require("../middleware/category.validation");
 
-// Importe la validation de l'identifiant
+// Importe la validation de l'ID
 const validateId = require("../middleware/id.validation");
+
+// Importe le middleware d'authentification JWT
+const authenticateToken = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -61,6 +64,8 @@ router.get("/:id", validateId, getCategoryById);
  *     summary: Crée une catégorie
  *     tags:
  *       - Categories
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -72,16 +77,22 @@ router.get("/:id", validateId, getCategoryById);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Boissons
+ *                 example: Pizzas
  *     responses:
  *       201:
  *         description: Catégorie créée avec succès
  *       400:
- *         description: Nom absent ou invalide
- *       409:
- *         description: Catégorie déjà existante
+ *         description: Données invalides
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  */
-router.post("/", validateCategoryData, createCategory);
+router.post(
+    "/",
+    authenticateToken,
+    authorizeRoles("admin", "staff"),
+    validateCategoryData,
+    createCategory
+);
 
 /**
  * @openapi
@@ -90,6 +101,8 @@ router.post("/", validateCategoryData, createCategory);
  *     summary: Modifie une catégorie
  *     tags:
  *       - Categories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -108,17 +121,21 @@ router.post("/", validateCategoryData, createCategory);
  *             properties:
  *               name:
  *                 type: string
- *                 example: Desserts
+ *                 example: Pizzas italiennes
  *     responses:
  *       200:
  *         description: Catégorie modifiée avec succès
  *       400:
- *         description: Identifiant ou nom invalide
+ *         description: Identifiant ou données invalides
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  *       404:
  *         description: Catégorie introuvable
  */
 router.put(
     "/:id",
+    authenticateToken,
+    authorizeRoles("admin"),
     validateId,
     validateCategoryData,
     updateCategory
@@ -131,6 +148,8 @@ router.put(
  *     summary: Supprime une catégorie
  *     tags:
  *       - Categories
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -143,9 +162,17 @@ router.put(
  *         description: Catégorie supprimée avec succès
  *       400:
  *         description: Identifiant invalide
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  *       404:
  *         description: Catégorie introuvable
  */
-router.delete("/:id", validateId, deleteCategory);
+router.delete(
+    "/:id",
+    authenticateToken,
+    authorizeRoles("admin"),
+    validateId,
+    deleteCategory
+);
 
 module.exports = router;

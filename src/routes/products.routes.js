@@ -1,4 +1,5 @@
 const express = require("express");
+const authorizeRoles = require("../middleware/role.middleware");
 
 // Importe les controllers
 const {
@@ -14,6 +15,9 @@ const validateProductData = require("../middleware/product.validation");
 
 // Importe la validation de l'ID
 const validateId = require("../middleware/id.validation");
+
+// Importe le middleware d'authentification JWT
+const authenticateToken = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -61,6 +65,8 @@ router.get("/:id", validateId, getProductById);
  *     summary: Crée un produit
  *     tags:
  *       - Products
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -92,11 +98,18 @@ router.get("/:id", validateId, getProductById);
  *         description: Produit créé avec succès
  *       400:
  *         description: Données invalides
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  *       404:
  *         description: Catégorie introuvable
  */
-router.post("/", validateProductData, createProduct);
-
+router.post(
+    "/",
+    authenticateToken,
+    authorizeRoles("admin", "staff"),
+    validateProductData,
+    createProduct
+);
 /**
  * @openapi
  * /api/products/{id}:
@@ -104,6 +117,8 @@ router.post("/", validateProductData, createProduct);
  *     summary: Modifie un produit
  *     tags:
  *       - Products
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -142,11 +157,15 @@ router.post("/", validateProductData, createProduct);
  *         description: Produit modifié avec succès
  *       400:
  *         description: Identifiant ou données invalides
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  *       404:
  *         description: Produit ou catégorie introuvable
  */
 router.put(
     "/:id",
+    authenticateToken,
+    authorizeRoles("admin"),
     validateId,
     validateProductData,
     updateProduct
@@ -159,6 +178,8 @@ router.put(
  *     summary: Supprime un produit
  *     tags:
  *       - Products
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -171,9 +192,17 @@ router.put(
  *         description: Produit supprimé avec succès
  *       400:
  *         description: Identifiant invalide
+ *       401:
+ *         description: Token d'authentification manquant ou invalide
  *       404:
  *         description: Produit introuvable
  */
-router.delete("/:id", validateId, deleteProduct);
+router.delete(
+    "/:id",
+    authenticateToken,
+    authorizeRoles("admin"),
+    validateId,
+    deleteProduct
+);
 
 module.exports = router;

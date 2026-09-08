@@ -1,28 +1,28 @@
-// ==================================================
-// Middleware global de gestion des erreurs
-// ==================================================
-
 const errorMiddleware = (err, req, res, next) => {
-
-    // Affiche l'erreur dans le terminal
     console.error("❌ Erreur :", err);
 
-
-    // Vérifie si une réponse a déjà été envoyée
     if (res.headersSent) {
         return next(err);
     }
 
+    // Erreur JSON mal formé
+    if (err.type === "entity.parse.failed") {
+        return res.status(400).json({
+            error: "JSON invalide"
+        });
+    }
 
-    // Retourne une erreur générique au client
-    res.status(500).json({
-        error: "Erreur serveur"
+    const statusCode = err.statusCode || err.status || 500;
+
+    // Ne pas exposer les détails internes en production
+    const message =
+        statusCode >= 500
+            ? "Erreur interne du serveur"
+            : err.message || "Erreur";
+
+    res.status(statusCode).json({
+        error: message
     });
 };
-
-
-// ==================================================
-// Exporter le middleware
-// ==================================================
 
 module.exports = errorMiddleware;
