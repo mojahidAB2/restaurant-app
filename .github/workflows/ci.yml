@@ -55,3 +55,6 @@ jobs:
           DB_PASSWORD: ci_password
           DB_NAME: restaurant_db
           JWT_SECRET: ci_test_secret
+
+      - name: Construire l'image Docker
+        run: docker build -t restaurant-app:ci .
