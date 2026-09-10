@@ -41,7 +41,7 @@ jobs:
         run: npm ci
 
       - name: Initialiser la base de données de test
-        run: mysql -h 127.0.0.1 -u root -p"$DB_PASSWORD" "$DB_NAME" < src/database/schema.sql
+        run: mysql -h 127.0.0.1 -P 3306 -u root -p"$DB_PASSWORD" "$DB_NAME" < src/database/schema.sql
         env:
           DB_PASSWORD: ci_password
           DB_NAME: restaurant_db
@@ -50,6 +50,7 @@ jobs:
         run: npm test
         env:
           DB_HOST: 127.0.0.1
+          DB_PORT: 3306
           DB_USER: root
           DB_PASSWORD: ci_password
           DB_NAME: restaurant_db
