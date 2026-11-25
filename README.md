@@ -62,7 +62,8 @@ Variables principales :
 | `DB_NAME` | Base de données | `restaurant_db` |
 | `DB_ROOT_PASSWORD` | Mot de passe root MySQL (Docker Compose) | `rootsecret` |
 | `JWT_SECRET` | Secret de signature JWT | `long_random_secret` |
-| `CORS_ORIGIN` | Origines autorisées, séparées par virgules | `http://localhost:5173` |
+| `CORS_ORIGIN` | Origines autorisées, séparées par virgules. En production, à définir explicitement. | `http://localhost:5173` |
+| `TRUST_PROXY` | Active `trust proxy` Express (`1`/`true`) derrière un reverse proxy | `1` |
 | `ADMIN_NAME` | Nom admin pour le seed | `Admin` |
 | `ADMIN_EMAIL` | Email admin pour le seed | `admin@example.com` |
 | `ADMIN_PASSWORD` | Mot de passe admin pour le seed | `ChangeMe123!` |
@@ -186,17 +187,18 @@ Documentation interactive : `GET /api-docs`.
 
 ## Stratégie base de données
 
-- `src/database/schema.sql` est la source de vérité pour l'initialisation du schéma.
+- `src/database/schema.sql` est la source de vérité pour l'initialisation complète d'une nouvelle base.
 - Docker Compose et la CI initialisent la base à partir de ce fichier.
+- Les changements incrémentaux pour bases existantes sont versionnés dans `src/database/migrations/` (ex. `002_add_constraints.sql` pour contrainte d'unicité catégorie et FK produit explicite).
 - Le script `src/database/seed-admin.js` permet de créer/promouvoir un admin sans modifier le schéma.
-- Les migrations versionnées peuvent être ajoutées dans `src/database/migrations/` si le projet évolue; dans ce cas, documenter l'ordre d'application et éviter de dupliquer le schéma canonique.
 
 ## Notes de sécurité
 
 - Les mots de passe sont hashés avec bcrypt.
 - Les routes sensibles utilisent JWT + contrôle de rôle.
 - Les endpoints `/api` ont une limitation de débit globale; `/api/auth` a une limite plus stricte.
-- CORS est configurable par `CORS_ORIGIN`.
+- CORS est configurable par `CORS_ORIGIN`. En production, définir explicitement les origines autorisées.
+- `TRUST_PROXY` doit être activé (`1`) derrière un reverse proxy pour que le rate limiting utilise la bonne IP client.
 - Le middleware d'erreur ne renvoie pas les détails internes en 5xx.
 
 ## CI

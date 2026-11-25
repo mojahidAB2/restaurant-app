@@ -33,10 +33,21 @@ app.use(express.json());
 // Sécurité des headers HTTP
 app.use(helmet());
 
+// Derrière un reverse proxy (Nginx, Render, etc.), activer TRUST_PROXY=1
+if (process.env.TRUST_PROXY === "1" || process.env.TRUST_PROXY === "true") {
+    app.set("trust proxy", 1);
+}
+
 // CORS configurable via CORS_ORIGIN (liste séparée par des virgules)
-const corsOrigin = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
-    : "*";
+const corsOriginEnv = process.env.CORS_ORIGIN;
+const corsOrigin = corsOriginEnv
+    ? corsOriginEnv.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : (process.env.NODE_ENV === "production" ? false : "*");
+
+if (corsOrigin === false) {
+    console.warn("CORS_ORIGIN non défini en production: les requêtes cross-origin navigateur seront bloquées.");
+}
+
 app.use(cors({ origin: corsOrigin }));
 
 // Limite globale basique

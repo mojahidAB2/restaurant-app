@@ -15,7 +15,10 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(100) NOT NULL,
 
     -- Date de création
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Nom de catégorie unique
+    UNIQUE KEY uq_categories_name (name)
 
 );
 
@@ -51,6 +54,8 @@ CREATE TABLE IF NOT EXISTS products (
     CONSTRAINT fk_products_category
         FOREIGN KEY (category_id)
         REFERENCES categories(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
 
 );
 CREATE TABLE IF NOT EXISTS users (
