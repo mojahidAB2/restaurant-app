@@ -68,3 +68,21 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- ============================================================
+-- TABLE : schema_migrations
+-- Suivi des migrations SQL appliquées
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    filename VARCHAR(255) NOT NULL UNIQUE,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Migrations déjà incluses dans le schéma complet
+INSERT INTO schema_migrations (filename)
+SELECT '002_add_constraints.sql'
+WHERE NOT EXISTS (
+    SELECT 1 FROM schema_migrations WHERE filename = '002_add_constraints.sql'
+);
