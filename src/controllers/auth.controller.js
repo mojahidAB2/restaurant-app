@@ -24,7 +24,29 @@ const login = async (req, res, next) => {
     }
 };
 
+const refresh = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        const result = await authService.refresh(refreshToken);
+        res.status(200).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const logout = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body;
+        await authService.logout(refreshToken);
+        res.status(200).json({ message: "Déconnexion réussie" });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     register,
-    login
+    login,
+    refresh,
+    logout
 };

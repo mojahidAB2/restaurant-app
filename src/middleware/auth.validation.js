@@ -55,7 +55,17 @@ const validateLoginData = (req, res, next) => {
     next();
 };
 
+const validateRefreshTokenData = (req, res, next) => {
+    const refreshToken = typeof req.body?.refreshToken === "string" ? req.body.refreshToken.trim() : "";
+    if (!refreshToken) {
+        return res.status(400).json({ error: "Refresh token requis" });
+    }
+    req.body.refreshToken = refreshToken;
+    next();
+};
+
 module.exports = {
     validateRegisterData,
-    validateLoginData
+    validateLoginData,
+    validateRefreshTokenData
 };

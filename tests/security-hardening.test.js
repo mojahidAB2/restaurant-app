@@ -46,6 +46,7 @@ describe("Security hardening", () => {
     test("Le rate limiting auth renvoie 429 après trop de tentatives", async () => {
         process.env.NODE_ENV = "test";
         process.env.CORS_ORIGIN = "*";
+        process.env.AUTH_RATE_LIMIT_MAX = "20";
 
         const app = require("../app");
         let lastResponse;

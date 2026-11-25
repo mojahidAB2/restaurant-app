@@ -379,6 +379,75 @@ describe("Authentication API", () => {
         expect(response.body.error).toBe("Le mot de passe est obligatoire");
     });
 
+    test("POST /api/auth/login retourne aussi un refreshToken", async () => {
+        const email = createTestEmail();
+        const password = "Password123!";
+
+        await request(app).post("/api/auth/register").send({ name: "Refresh User", email, password });
+        const loginResponse = await request(app).post("/api/auth/login").send({ email, password });
+
+        expect(loginResponse.statusCode).toBe(200);
+        expect(typeof loginResponse.body.token).toBe("string");
+        expect(typeof loginResponse.body.refreshToken).toBe("string");
+        expect(loginResponse.body.refreshToken.length).toBeGreaterThan(20);
+
+        await pool.query("DELETE FROM users WHERE email = ?", [email]);
+    });
+
+    test("POST /api/auth/refresh renouvelle les tokens et révoque l'ancien refresh", async () => {
+        const email = createTestEmail();
+        const password = "Password123!";
+
+        await request(app).post("/api/auth/register").send({ name: "Refresh Rotate", email, password });
+        const loginResponse = await request(app).post("/api/auth/login").send({ email, password });
+        const oldRefresh = loginResponse.body.refreshToken;
+
+        const refreshResponse = await request(app)
+            .post("/api/auth/refresh")
+            .send({ refreshToken: oldRefresh });
+
+        expect(refreshResponse.statusCode).toBe(200);
+        expect(typeof refreshResponse.body.token).toBe("string");
+        expect(typeof refreshResponse.body.refreshToken).toBe("string");
+        expect(refreshResponse.body.refreshToken).not.toBe(oldRefresh);
+        expect(refreshResponse.body.user.email).toBe(email);
+
+        const reused = await request(app)
+            .post("/api/auth/refresh")
+            .send({ refreshToken: oldRefresh });
+        expect(reused.statusCode).toBe(401);
+
+        await pool.query("DELETE FROM users WHERE email = ?", [email]);
+    });
+
+    test("POST /api/auth/logout révoque le refresh token", async () => {
+        const email = createTestEmail();
+        const password = "Password123!";
+
+        await request(app).post("/api/auth/register").send({ name: "Logout User", email, password });
+        const loginResponse = await request(app).post("/api/auth/login").send({ email, password });
+
+        const logoutResponse = await request(app)
+            .post("/api/auth/logout")
+            .send({ refreshToken: loginResponse.body.refreshToken });
+
+        expect(logoutResponse.statusCode).toBe(200);
+        expect(logoutResponse.body).toEqual({ message: "Déconnexion réussie" });
+
+        const refreshResponse = await request(app)
+            .post("/api/auth/refresh")
+            .send({ refreshToken: loginResponse.body.refreshToken });
+        expect(refreshResponse.statusCode).toBe(401);
+
+        await pool.query("DELETE FROM users WHERE email = ?", [email]);
+    });
+
+    test("POST /api/auth/refresh refuse un token manquant", async () => {
+        const response = await request(app).post("/api/auth/refresh").send({});
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe("Refresh token requis");
+    });
+
 });
 
 // ==================================================

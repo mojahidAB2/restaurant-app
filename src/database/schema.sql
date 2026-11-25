@@ -70,6 +70,30 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ============================================================
+-- TABLE : refresh_tokens
+-- Refresh tokens pour rotation/révocation
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id INT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    revoked_at DATETIME NULL,
+    replaced_by_token_hash CHAR(64) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_refresh_tokens_user
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON DELETE CASCADE,
+
+    UNIQUE KEY uq_refresh_tokens_hash (token_hash),
+    INDEX idx_refresh_tokens_user_id (user_id),
+    INDEX idx_refresh_tokens_expires_at (expires_at)
+);
+
+-- ============================================================
 -- TABLE : schema_migrations
 -- Suivi des migrations SQL appliquées
 -- ============================================================
@@ -85,4 +109,10 @@ INSERT INTO schema_migrations (filename)
 SELECT '002_add_constraints.sql'
 WHERE NOT EXISTS (
     SELECT 1 FROM schema_migrations WHERE filename = '002_add_constraints.sql'
+);
+
+INSERT INTO schema_migrations (filename)
+SELECT '003_create_refresh_tokens.sql'
+WHERE NOT EXISTS (
+    SELECT 1 FROM schema_migrations WHERE filename = '003_create_refresh_tokens.sql'
 );

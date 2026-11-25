@@ -62,6 +62,8 @@ Variables principales :
 | `DB_NAME` | Base de données | `restaurant_db` |
 | `DB_ROOT_PASSWORD` | Mot de passe root MySQL (Docker Compose) | `rootsecret` |
 | `JWT_SECRET` | Secret de signature JWT | `long_random_secret` |
+| `JWT_ACCESS_EXPIRES_IN` | Durée de vie access token | `15m` |
+| `JWT_REFRESH_EXPIRES_DAYS` | Durée de vie refresh token (jours) | `7` |
 | `CORS_ORIGIN` | Origines autorisées, séparées par virgules. En production, à définir explicitement. | `http://localhost:5173` |
 | `TRUST_PROXY` | Active `trust proxy` Express (`1`/`true`) derrière un reverse proxy | `1` |
 | `LOG_LEVEL` | Niveau de log (`error`, `warn`, `info`, `debug`) | `info` |
@@ -167,7 +169,9 @@ npm test
 ### Auth
 
 - `POST /api/auth/register` — crée un utilisateur (`staff` par défaut).
-- `POST /api/auth/login` — retourne un JWT.
+- `POST /api/auth/login` — retourne un access token et un refresh token.
+- `POST /api/auth/refresh` — renouvelle les tokens (rotation du refresh token).
+- `POST /api/auth/logout` — révoque un refresh token.
 
 ### Categories
 
@@ -198,7 +202,7 @@ Documentation interactive : `GET /api-docs`.
 ## Notes de sécurité, observabilité et déploiement
 
 - Les mots de passe sont hashés avec bcrypt; l’inscription exige un email valide et un mot de passe d’au moins 8 caractères.
-- Les routes sensibles utilisent JWT + contrôle de rôle. `JWT_SECRET` est obligatoire; en production, il doit être long et aléatoire (32+ caractères).
+- Les routes sensibles utilisent JWT + contrôle de rôle. `JWT_SECRET` est obligatoire; en production, il doit être long et aléatoire (32+ caractères). Les access tokens sont courts, les refresh tokens sont stockés en base, rotatifs et révocables.
 - Les endpoints `/api` ont une limitation de débit globale; `/api/auth` a une limite plus stricte.
 - CORS est configurable par `CORS_ORIGIN`. En production, définir explicitement les origines autorisées.
 - `TRUST_PROXY` doit être activé (`1`) derrière un reverse proxy pour que le rate limiting utilise la bonne IP client.
