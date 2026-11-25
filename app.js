@@ -1,5 +1,7 @@
 const express = require("express");
 const helmet = require("helmet");
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
 const authRoutes = require("./src/routes/auth.routes");
@@ -30,6 +32,22 @@ app.use(express.json());
 
 // Sécurité des headers HTTP
 app.use(helmet());
+
+// CORS configurable via CORS_ORIGIN (liste séparée par des virgules)
+const corsOrigin = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((origin) => origin.trim())
+    : "*";
+app.use(cors({ origin: corsOrigin }));
+
+// Limite globale basique
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Trop de requêtes, veuillez réessayer plus tard." }
+});
+app.use("/api", apiLimiter);
 
 // ==================================================
 // Swagger

@@ -60,6 +60,7 @@ jobs:
         run: docker build -t restaurant-app:ci .
 
       - name: Se connecter à GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -67,6 +68,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publier l'image Docker sur GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           docker tag restaurant-app:ci ghcr.io/mojahidab2/restaurant-app:latest
           docker push ghcr.io/mojahidab2/restaurant-app:latest

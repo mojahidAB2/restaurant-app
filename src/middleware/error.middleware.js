@@ -1,6 +1,4 @@
 const errorMiddleware = (err, req, res, next) => {
-    console.error("❌ Erreur :", err);
-
     if (res.headersSent) {
         return next(err);
     }
@@ -13,12 +11,19 @@ const errorMiddleware = (err, req, res, next) => {
     }
 
     const statusCode = err.statusCode || err.status || 500;
+    const isServerError = statusCode >= 500;
 
-    // Ne pas exposer les détails internes en production
-    const message =
-        statusCode >= 500
-            ? "Erreur interne du serveur"
-            : err.message || "Erreur";
+    if (isServerError) {
+        const logMessage =
+            process.env.NODE_ENV === "production"
+                ? err.message
+                : err.stack || err.message;
+        console.error("Erreur serveur:", logMessage);
+    }
+
+    const message = isServerError
+        ? "Erreur interne du serveur"
+        : err.message || "Erreur";
 
     res.status(statusCode).json({
         error: message

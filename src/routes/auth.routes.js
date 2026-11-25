@@ -1,13 +1,25 @@
 const express = require("express");
+const rateLimit = require("express-rate-limit");
 
 const {
     register,
     login
 } = require("../controllers/auth.controller");
 
-const validateRegisterData = require("../middleware/auth.validation");
+const {
+    validateRegisterData,
+    validateLoginData
+} = require("../middleware/auth.validation");
 
 const router = express.Router();
+
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Trop de tentatives d'authentification, réessayez plus tard." }
+});
 
 /**
  * @openapi
@@ -51,6 +63,7 @@ const router = express.Router();
 
 router.post(
     "/register",
+    authLimiter,
     validateRegisterData,
     register
 );
@@ -91,6 +104,8 @@ router.post(
 
 router.post(
     "/login",
+    authLimiter,
+    validateLoginData,
     login
 );
 

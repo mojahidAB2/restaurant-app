@@ -1,34 +1,19 @@
-const validateRegisterData = (req, res, next) => {
-    const {
-        name,
-        email,
-        password
-    } = req.body;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    // Vérifier le nom
-    if (
-        !name ||
-        typeof name !== "string" ||
-        name.trim() === ""
-    ) {
+const validateRegisterData = (req, res, next) => {
+    const { name, email, password } = req.body;
+
+    if (!name || typeof name !== "string" || name.trim() === "") {
         return res.status(400).json({
             error: "Le nom est obligatoire"
         });
     }
 
-    // Vérifier l'email
-    if (
-        !email ||
-        typeof email !== "string" ||
-        email.trim() === ""
-    ) {
+    if (!email || typeof email !== "string" || email.trim() === "") {
         return res.status(400).json({
             error: "L'email est obligatoire"
         });
     }
-
-    // Vérifier le format de l'email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email.trim())) {
         return res.status(400).json({
@@ -36,17 +21,12 @@ const validateRegisterData = (req, res, next) => {
         });
     }
 
-    // Vérifier le mot de passe
-    if (
-        !password ||
-        typeof password !== "string"
-    ) {
+    if (!password || typeof password !== "string") {
         return res.status(400).json({
             error: "Le mot de passe est obligatoire"
         });
     }
 
-    // Minimum 8 caractères
     if (password.length < 8) {
         return res.status(400).json({
             error: "Le mot de passe doit contenir au moins 8 caractères"
@@ -56,4 +36,31 @@ const validateRegisterData = (req, res, next) => {
     next();
 };
 
-module.exports = validateRegisterData;
+const validateLoginData = (req, res, next) => {
+    const { email, password } = req.body;
+
+    if (!email || typeof email !== "string" || email.trim() === "") {
+        return res.status(400).json({
+            error: "L'email est obligatoire"
+        });
+    }
+
+    if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({
+            error: "L'email est invalide"
+        });
+    }
+
+    if (!password || typeof password !== "string" || password === "") {
+        return res.status(400).json({
+            error: "Le mot de passe est obligatoire"
+        });
+    }
+
+    next();
+};
+
+module.exports = {
+    validateRegisterData,
+    validateLoginData
+};
