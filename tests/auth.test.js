@@ -334,6 +334,51 @@ describe("Authentication API", () => {
 
     });
 
+
+    // --------------------------------------------------
+    // POST /api/auth/login
+    // Validation des données
+    // --------------------------------------------------
+
+    test("POST /api/auth/login refuse un email manquant", async () => {
+
+        const response = await request(app)
+            .post("/api/auth/login")
+            .send({
+                password: "Password123!"
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe("L'email est obligatoire");
+    });
+
+
+    test("POST /api/auth/login refuse un email invalide", async () => {
+
+        const response = await request(app)
+            .post("/api/auth/login")
+            .send({
+                email: "email-invalide",
+                password: "Password123!"
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe("L'email est invalide");
+    });
+
+
+    test("POST /api/auth/login refuse un mot de passe manquant", async () => {
+
+        const response = await request(app)
+            .post("/api/auth/login")
+            .send({
+                email: createTestEmail()
+            });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.error).toBe("Le mot de passe est obligatoire");
+    });
+
 });
 
 // ==================================================
