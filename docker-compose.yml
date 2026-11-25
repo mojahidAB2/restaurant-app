@@ -45,6 +45,11 @@ services:
       - "3000:3000"
 
     environment:
+      NODE_ENV: production
+      PORT: 3000
+      TRUST_PROXY: ${TRUST_PROXY:-1}
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       DB_HOST: db
       DB_PORT: 3306
       DB_USER: ${DB_USER}

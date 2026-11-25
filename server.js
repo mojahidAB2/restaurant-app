@@ -3,11 +3,14 @@ require("dotenv").config();
 // Importe l'application Express
 const app = require("./app");
 const logger = require("./src/config/logger");
+const { validateEnv } = require("./src/config/env");
+
+validateEnv();
 
 const PORT = Number(process.env.PORT) || 3000;
 
 // ==================================================
-// D?marrage du serveur
+// Démarrage du serveur
 // ==================================================
 
 const server = app.listen(PORT, () => {
