@@ -5,6 +5,9 @@ const rateLimit = require("express-rate-limit");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./src/config/swagger");
 const authRoutes = require("./src/routes/auth.routes");
+const requestIdMiddleware = require("./src/middleware/requestId.middleware");
+const requestLoggerMiddleware = require("./src/middleware/requestLogger.middleware");
+const logger = require("./src/config/logger");
 
 // Importe le middleware 404
 const notFoundMiddleware = require("./src/middleware/notFound.middleware");
@@ -26,6 +29,9 @@ const app = express();
 // ==================================================
 // Middleware
 // ==================================================
+
+app.use(requestIdMiddleware);
+app.use(requestLoggerMiddleware);
 
 // Permet à Express de lire les données JSON
 app.use(express.json());
@@ -112,15 +118,23 @@ app.get("/", (req, res) => {
 // ==================================================
 
 app.get("/health", async (req, res) => {
+    const health = {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.round(process.uptime()),
+        database: "connected"
+    };
+
     try {
         await pool.query("SELECT 1");
-
-        res.status(200).json({
-            status: "ok",
-            database: "connected"
-        });
+        res.status(200).json(health);
     } catch (error) {
+        logger.error("healthcheck_failed", {
+            requestId: req.requestId,
+            message: error.message
+        });
         res.status(503).json({
+            ...health,
             status: "error",
             database: "unavailable"
         });

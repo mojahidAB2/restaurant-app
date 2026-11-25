@@ -1,3 +1,5 @@
+const logger = require("../config/logger");
+
 const errorMiddleware = (err, req, res, next) => {
     if (res.headersSent) {
         return next(err);
@@ -14,11 +16,14 @@ const errorMiddleware = (err, req, res, next) => {
     const isServerError = statusCode >= 500;
 
     if (isServerError) {
-        const logMessage =
-            process.env.NODE_ENV === "production"
-                ? err.message
-                : err.stack || err.message;
-        console.error("Erreur serveur:", logMessage);
+        logger.error("server_error", {
+            requestId: req.requestId,
+            method: req.method,
+            path: req.originalUrl,
+            statusCode,
+            message: err.message,
+            stack: process.env.NODE_ENV === "production" ? undefined : err.stack
+        });
     }
 
     const message = isServerError
