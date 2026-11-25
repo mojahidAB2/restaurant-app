@@ -19,7 +19,7 @@ const {
 const getAllCategories = async (req, res, next) => {
     try {
         // Demande au service de récupérer toutes les catégories
-        const categories = await findAllCategories();
+        const categories = await findAllCategories(req.query);
 
         // Retourne les catégories au client
         res.json(categories);

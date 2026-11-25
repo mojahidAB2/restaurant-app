@@ -17,9 +17,8 @@ const {
 const getAllProducts = async (req, res, next) => {
     try {
         // Demande au service de récupérer tous les produits
-        const products = await findAllProducts();
+        const products = await findAllProducts(req.query);
 
-        // Retourne les produits au client
         res.json(products);
 
     } catch (error) {

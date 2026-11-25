@@ -485,6 +485,75 @@ describe("Products API", () => {
 
     });
 
+    test("PUT /api/products/:id doit retourner 401 sans JWT", async () => {
+        const response = await request(app)
+            .put("/api/products/1")
+            .send({ name: "X", price: 10, category_id: 1 });
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.error).toBe("Token d'authentification manquant");
+    });
+
+    test("DELETE /api/products/:id doit retourner 401 sans JWT", async () => {
+        const response = await request(app).delete("/api/products/1");
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.error).toBe("Token d'authentification manquant");
+    });
+
+    test("PUT /api/products/:id doit retourner 403 pour un staff", async () => {
+        const categoryResponse = await request(app)
+            .post("/api/categories")
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Categorie Produit RBAC ${Date.now()}` });
+        expect(categoryResponse.statusCode).toBe(201);
+        const categoryId = categoryResponse.body.id;
+
+        const createResponse = await request(app)
+            .post("/api/products")
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Produit RBAC ${Date.now()}`, price: 10, category_id: categoryId, available: true });
+        expect(createResponse.statusCode).toBe(201);
+        const productId = createResponse.body.id;
+
+        const updateResponse = await request(app)
+            .put(`/api/products/${productId}`)
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: "Produit interdit", price: 20, category_id: categoryId, available: true });
+
+        expect(updateResponse.statusCode).toBe(403);
+        expect(updateResponse.body).toEqual({ error: "Accès interdit pour ce rôle" });
+
+        await request(app).delete(`/api/products/${productId}`).set("Authorization", `Bearer ${createAuthToken("admin")}`);
+        await request(app).delete(`/api/categories/${categoryId}`).set("Authorization", `Bearer ${createAuthToken("admin")}`);
+    });
+
+    test("DELETE /api/products/:id doit retourner 403 pour un staff", async () => {
+        const categoryResponse = await request(app)
+            .post("/api/categories")
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Categorie Produit RBAC2 ${Date.now()}` });
+        expect(categoryResponse.statusCode).toBe(201);
+        const categoryId = categoryResponse.body.id;
+
+        const createResponse = await request(app)
+            .post("/api/products")
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Produit RBAC2 ${Date.now()}`, price: 10, category_id: categoryId, available: true });
+        expect(createResponse.statusCode).toBe(201);
+        const productId = createResponse.body.id;
+
+        const deleteResponse = await request(app)
+            .delete(`/api/products/${productId}`)
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`);
+
+        expect(deleteResponse.statusCode).toBe(403);
+        expect(deleteResponse.body).toEqual({ error: "Accès interdit pour ce rôle" });
+
+        await request(app).delete(`/api/products/${productId}`).set("Authorization", `Bearer ${createAuthToken("admin")}`);
+        await request(app).delete(`/api/categories/${categoryId}`).set("Authorization", `Bearer ${createAuthToken("admin")}`);
+    });
+
 });
 
 // ==================================================

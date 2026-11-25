@@ -2,23 +2,79 @@
 const pool = require("../config/database");
 
 
+const CATEGORY_SORT_COLUMNS = {
+    id: "id",
+    name: "name",
+    created_at: "created_at"
+};
+
+const parsePagination = (query = {}) => {
+    const hasPage = query.page !== undefined;
+    const hasLimit = query.limit !== undefined;
+    if (!hasPage && !hasLimit) return null;
+
+    const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(query.limit, 10) || 20));
+    return { page, limit, offset: (page - 1) * limit };
+};
+
 // ==================================================
 // Récupérer toutes les catégories
 // ==================================================
 
-const findAllCategories = async () => {
+const findAllCategories = async (query = {}) => {
+    const pagination = parsePagination(query);
+    const where = [];
+    const params = [];
 
-    const [categories] = await pool.query(`
-        SELECT
-            id,
-            name,
-            created_at
+    if (typeof query.q === "string" && query.q.trim()) {
+        where.push("name LIKE ?");
+        params.push(`%${query.q.trim()}%`);
+    }
+
+    const sortKey = CATEGORY_SORT_COLUMNS[query.sort] ? query.sort : "id";
+    const sortColumn = CATEGORY_SORT_COLUMNS[sortKey];
+    const sortOrder = String(query.order).toLowerCase() === "desc" ? "DESC" : "ASC";
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    if (!pagination) {
+        const [categories] = await pool.query(
+            `
+            SELECT id, name, created_at
+            FROM categories
+            ${whereSql}
+            ORDER BY ${sortColumn} ${sortOrder}
+            `,
+            params
+        );
+        return categories;
+    }
+
+    const [[{ total }]] = await pool.query(
+        `SELECT COUNT(*) AS total FROM categories ${whereSql}`,
+        params
+    );
+
+    const [categories] = await pool.query(
+        `
+        SELECT id, name, created_at
         FROM categories
-        ORDER BY id
-    `);
+        ${whereSql}
+        ORDER BY ${sortColumn} ${sortOrder}
+        LIMIT ? OFFSET ?
+        `,
+        [...params, pagination.limit, pagination.offset]
+    );
 
-    // Retourne toutes les catégories
-    return categories;
+    return {
+        data: categories,
+        pagination: {
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / pagination.limit))
+        }
+    };
 };
 
 

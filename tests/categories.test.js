@@ -508,6 +508,46 @@ describe("Categories API", () => {
 
     });
 
+    test("PUT /api/categories/:id doit retourner 401 sans JWT", async () => {
+        const response = await request(app)
+            .put("/api/categories/1")
+            .send({ name: "Sans token" });
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.error).toBe("Token d'authentification manquant");
+    });
+
+    test("DELETE /api/categories/:id doit retourner 401 sans JWT", async () => {
+        const response = await request(app).delete("/api/categories/1");
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.error).toBe("Token d'authentification manquant");
+    });
+
+    test("PUT /api/categories/:id doit retourner 403 pour un staff", async () => {
+        const createResponse = await request(app)
+            .post("/api/categories")
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Categorie PUT STAFF ${Date.now()}` });
+
+        expect(createResponse.statusCode).toBe(201);
+        const categoryId = createResponse.body.id;
+
+        const updateResponse = await request(app)
+            .put(`/api/categories/${categoryId}`)
+            .set("Authorization", `Bearer ${createAuthToken("staff")}`)
+            .send({ name: `Categorie PUT STAFF MODIF ${Date.now()}` });
+
+        expect(updateResponse.statusCode).toBe(403);
+        expect(updateResponse.body).toEqual({
+            error: "Accès interdit pour ce rôle"
+        });
+
+        await request(app)
+            .delete(`/api/categories/${categoryId}`)
+            .set("Authorization", `Bearer ${createAuthToken("admin")}`);
+    });
+
 });
 
 // ==================================================

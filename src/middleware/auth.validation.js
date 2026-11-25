@@ -1,30 +1,30 @@
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+﻿const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeAuthBody = (body = {}) => {
+    const name = typeof body.name === "string" ? body.name.trim() : "";
+    const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+    const password = typeof body.password === "string" ? body.password : "";
+    return { name, email, password };
+};
 
 const validateRegisterData = (req, res, next) => {
-    const { name, email, password } = req.body;
+    const { name, email, password } = normalizeAuthBody(req.body);
+    req.body = { ...req.body, name, email, password };
 
-    if (!name || typeof name !== "string" || name.trim() === "") {
-        return res.status(400).json({
-            error: "Le nom est obligatoire"
-        });
+    if (!name) {
+        return res.status(400).json({ error: "Le nom est obligatoire" });
     }
 
-    if (!email || typeof email !== "string" || email.trim() === "") {
-        return res.status(400).json({
-            error: "L'email est obligatoire"
-        });
+    if (!email) {
+        return res.status(400).json({ error: "L'email est obligatoire" });
     }
 
-    if (!emailRegex.test(email.trim())) {
-        return res.status(400).json({
-            error: "L'email est invalide"
-        });
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "L'email est invalide" });
     }
 
-    if (!password || typeof password !== "string") {
-        return res.status(400).json({
-            error: "Le mot de passe est obligatoire"
-        });
+    if (!password) {
+        return res.status(400).json({ error: "Le mot de passe est obligatoire" });
     }
 
     if (password.length < 8) {
@@ -37,24 +37,19 @@ const validateRegisterData = (req, res, next) => {
 };
 
 const validateLoginData = (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, password } = normalizeAuthBody(req.body);
+    req.body = { ...req.body, email, password };
 
-    if (!email || typeof email !== "string" || email.trim() === "") {
-        return res.status(400).json({
-            error: "L'email est obligatoire"
-        });
+    if (!email) {
+        return res.status(400).json({ error: "L'email est obligatoire" });
     }
 
-    if (!emailRegex.test(email.trim())) {
-        return res.status(400).json({
-            error: "L'email est invalide"
-        });
+    if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "L'email est invalide" });
     }
 
-    if (!password || typeof password !== "string" || password === "") {
-        return res.status(400).json({
-            error: "Le mot de passe est obligatoire"
-        });
+    if (!password) {
+        return res.status(400).json({ error: "Le mot de passe est obligatoire" });
     }
 
     next();

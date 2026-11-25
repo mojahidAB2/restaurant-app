@@ -2,13 +2,64 @@
 const pool = require("../config/database");
 
 
+const PRODUCT_SORT_COLUMNS = {
+    id: "products.id",
+    name: "products.name",
+    price: "products.price",
+    created_at: "products.created_at",
+    category: "categories.name",
+    available: "products.available"
+};
+
+const parsePagination = (query = {}) => {
+    const hasPage = query.page !== undefined;
+    const hasLimit = query.limit !== undefined;
+    if (!hasPage && !hasLimit) return null;
+
+    const page = Math.max(1, Number.parseInt(query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, Number.parseInt(query.limit, 10) || 20));
+    return { page, limit, offset: (page - 1) * limit };
+};
+
 // ==================================================
 // Récupérer tous les produits
 // ==================================================
 
-const findAllProducts = async () => {
+const findAllProducts = async (query = {}) => {
+    const pagination = parsePagination(query);
+    const where = [];
+    const params = [];
 
-    const [products] = await pool.query(`
+    if (typeof query.q === "string" && query.q.trim()) {
+        where.push("products.name LIKE ?");
+        params.push(`%${query.q.trim()}%`);
+    }
+
+    if (query.category_id !== undefined && query.category_id !== "") {
+        const categoryId = Number.parseInt(query.category_id, 10);
+        if (Number.isInteger(categoryId) && categoryId > 0) {
+            where.push("products.category_id = ?");
+            params.push(categoryId);
+        }
+    }
+
+    if (query.available !== undefined && query.available !== "") {
+        const normalized = String(query.available).toLowerCase();
+        if (normalized === "true" || normalized === "1") {
+            where.push("products.available = ?");
+            params.push(1);
+        } else if (normalized === "false" || normalized === "0") {
+            where.push("products.available = ?");
+            params.push(0);
+        }
+    }
+
+    const sortKey = PRODUCT_SORT_COLUMNS[query.sort] ? query.sort : "id";
+    const sortColumn = PRODUCT_SORT_COLUMNS[sortKey];
+    const sortOrder = String(query.order).toLowerCase() === "desc" ? "DESC" : "ASC";
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+
+    const baseSelect = `
         SELECT
             products.id,
             products.name,
@@ -20,10 +71,35 @@ const findAllProducts = async () => {
         FROM products
         JOIN categories
             ON products.category_id = categories.id
-        ORDER BY products.id
-    `);
+    `;
 
-    return products;
+    if (!pagination) {
+        const [products] = await pool.query(
+            `${baseSelect} ${whereSql} ORDER BY ${sortColumn} ${sortOrder}`,
+            params
+        );
+        return products;
+    }
+
+    const [[{ total }]] = await pool.query(
+        `SELECT COUNT(*) AS total FROM products JOIN categories ON products.category_id = categories.id ${whereSql}`,
+        params
+    );
+
+    const [products] = await pool.query(
+        `${baseSelect} ${whereSql} ORDER BY ${sortColumn} ${sortOrder} LIMIT ? OFFSET ?`,
+        [...params, pagination.limit, pagination.offset]
+    );
+
+    return {
+        data: products,
+        pagination: {
+            page: pagination.page,
+            limit: pagination.limit,
+            total,
+            totalPages: Math.max(1, Math.ceil(total / pagination.limit))
+        }
+    };
 };
 
 

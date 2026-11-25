@@ -28,9 +28,48 @@ const router = express.Router();
  *     summary: Récupère tous les produits
  *     tags:
  *       - Products
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Page (active la réponse paginée avec limit)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Nombre d'éléments par page
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Recherche par nom
+ *       - in: query
+ *         name: category_id
+ *         schema:
+ *           type: integer
+ *         description: Filtre par catégorie
+ *       - in: query
+ *         name: available
+ *         schema:
+ *           type: boolean
+ *         description: Filtre par disponibilité
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [id, name, price, created_at, category, available]
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
  *     responses:
  *       200:
- *         description: Liste des produits
+ *         description: Liste des produits (tableau, ou objet paginé si page/limit)
  */
 router.get("/", getAllProducts);
 

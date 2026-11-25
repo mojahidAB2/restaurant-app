@@ -27,9 +27,36 @@ const router = express.Router();
  *     summary: Récupère toutes les catégories
  *     tags:
  *       - Categories
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Recherche par nom
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [id, name, created_at]
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
  *     responses:
  *       200:
- *         description: Liste des catégories
+ *         description: Liste des catégories (tableau, ou objet paginé si page/limit)
  */
 router.get("/", getAllCategories);
 
